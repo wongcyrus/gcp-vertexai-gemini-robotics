@@ -1,0 +1,55 @@
+{
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {},
+        "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.13"
+        }
+    },
+    "customizations": {
+        "codespaces": {
+            "openFiles": []
+        },
+        "vscode": {
+            "settings": {
+                "python.linting.enabled": true,
+                "python.linting.flake8Path": "/usr/local/py-utils/bin/flake8",
+                "python.linting.flake8Enabled": true,
+                "flake8.args": [
+                    "--max-line-length=120"
+                ],
+                "python.testing.pytestArgs": [],
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestEnabled": true,
+                "python.analysis.extraPaths": [
+                    "./amazon-nova-robotic/robot_client"
+                ],
+                "pylint.importStrategy": "useBundled",
+                "[python]": {
+                    "editor.defaultFormatter": "ms-python.black-formatter",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "explicit"
+                    }
+                },
+                "isort.args": [
+                    "--profile",
+                    "black"
+                ]
+            },
+            // Add the IDs of extensions you want installed when the container is created.
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-python.flake8",
+                "ms-python.pylint",
+                "ms-python.isort",
+                "ms-toolsai.jupyter",
+                "GitHub.copilot",
+                "esbenp.prettier-vscode"
+            ]
+        }
+    }
+}
