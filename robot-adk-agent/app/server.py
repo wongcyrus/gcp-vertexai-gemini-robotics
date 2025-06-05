@@ -19,6 +19,8 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 import backoff
+import fastmcp
+from app.agent import MODEL_ID, genai_client, get_live_connect_config
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import logging as google_cloud_logging
@@ -26,8 +28,6 @@ from google.genai import types
 from google.genai.types import LiveServerToolCall
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedError
-
-from app.agent import MODEL_ID, genai_client, live_connect_config, tool_functions
 
 app = FastAPI()
 app.add_middleware(
@@ -40,12 +40,32 @@ logging_client = google_cloud_logging.Client()
 logger = logging_client.logger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+# uv run mcp run ./server.py
+config = {
+    "mcpServers": {
+        "robot": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/workspaces/gcp-vertexai-gemini-robotics/robot-mcp-server/humanoid",
+                "run",
+                "python",
+                "server.py",
+            ],
+        },
+    }
+}
+
+mcp_client = fastmcp.Client(config)
+
 
 class GeminiSession:
     """Manages bidirectional communication between a client and the Gemini model."""
 
     def __init__(
-        self, session: Any, websocket: WebSocket, tool_functions: dict[str, Callable]
+        self,
+        session: Any,
+        websocket: WebSocket,
     ) -> None:
         """Initialize the Gemini session.
 
@@ -59,7 +79,6 @@ class GeminiSession:
         self.websocket = websocket
         self.run_id = "n/a"
         self.user_id = "n/a"
-        self.tool_functions = tool_functions
         self._tool_tasks: list[asyncio.Task] = []
 
     async def receive_from_client(self) -> None:
@@ -91,12 +110,6 @@ class GeminiSession:
                 logging.error(f"Error receiving from client {self.user_id}: {e!s}")
                 break
 
-    def _get_func(self, action_label: str | None) -> Callable | None:
-        """Get the tool function for a given action label."""
-        if action_label is None or action_label == "":
-            return None
-        return self.tool_functions.get(action_label)
-
     async def _handle_tool_call(
         self, session: Any, tool_call: LiveServerToolCall
     ) -> None:
@@ -107,19 +120,8 @@ class GeminiSession:
 
         for fc in tool_call.function_calls:
             logging.debug(f"Calling tool function: {fc.name} with args: {fc.args}")
-            func = self._get_func(fc.name)
-            if func is None:
-                logging.error(f"Function {fc.name} not found")
-                continue
-            args = fc.args if fc.args is not None else {}
 
-            # Handle both async and sync functions appropriately
-            if asyncio.iscoroutinefunction(func):
-                # Function is already async
-                response = await func(**args)
-            else:
-                # Run sync function in a thread pool to avoid blocking
-                response = await asyncio.to_thread(func, **args)
+            response = await mcp_client.call_tool(fc.name, fc.args)
 
             tool_response = types.LiveClientToolResponse(
                 function_responses=[
@@ -165,18 +167,26 @@ def get_connect_and_run_callable(websocket: WebSocket) -> Callable:
         backoff.expo, ConnectionClosedError, max_tries=10, on_backoff=on_backoff
     )
     async def connect_and_run() -> None:
-        async with genai_client.aio.live.connect(
-            model=MODEL_ID, config=live_connect_config
-        ) as session:
-            await websocket.send_json({"status": "Backend is ready for conversation"})
-            gemini_session = GeminiSession(
-                session=session, websocket=websocket, tool_functions=tool_functions
+        async with mcp_client:
+            mcp_session = mcp_client.session
+            live_connect_config = get_live_connect_config(
+                tools=[mcp_session],
             )
-            logging.info("Starting bidirectional communication")
-            await asyncio.gather(
-                gemini_session.receive_from_client(),
-                gemini_session.receive_from_gemini(),
-            )
+            async with genai_client.aio.live.connect(
+                model=MODEL_ID, config=live_connect_config
+            ) as session:
+                await websocket.send_json(
+                    {"status": "Backend is ready for conversation"}
+                )
+                gemini_session = GeminiSession(
+                    session=session,
+                    websocket=websocket,
+                )
+                logging.info("Starting bidirectional communication")
+                await asyncio.gather(
+                    gemini_session.receive_from_client(),
+                    gemini_session.receive_from_gemini(),
+                )
 
     return connect_and_run
 

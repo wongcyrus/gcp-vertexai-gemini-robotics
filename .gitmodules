@@ -1,0 +1,3 @@
+[submodule "robot-mcp-server"]
+	path = robot-mcp-server
+	url = https://github.com/wongcyrus/robot-mcp-server
