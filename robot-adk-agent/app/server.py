@@ -16,6 +16,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable
+from contextlib import asynccontextmanager
 from typing import Any, Literal
 
 import backoff
@@ -28,17 +29,6 @@ from google.genai import types
 from google.genai.types import LiveServerToolCall
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedError
-
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-logging_client = google_cloud_logging.Client()
-logger = logging_client.logger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 config = {
     "mcpServers": {
@@ -58,7 +48,28 @@ config = {
     }
 }
 
-mcp_client = fastmcp.Client(config)
+# mcp_client is now managed as app.state.mcp_client
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
+    app.state.mcp_client = fastmcp.Client(config)
+    yield
+    # Clean up the ML models and release the resources
+    app.state.mcp_client.close()
+
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+logging_client = google_cloud_logging.Client()
+logger = logging_client.logger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class GeminiSession:
@@ -68,6 +79,7 @@ class GeminiSession:
         self,
         session: Any,
         websocket: WebSocket,
+        mcp_client: Any,
     ) -> None:
         """Initialize the Gemini session.
 
@@ -79,6 +91,7 @@ class GeminiSession:
         """
         self.session = session
         self.websocket = websocket
+        self.mcp_client = mcp_client
         self.run_id = "n/a"
         self.user_id = "n/a"
         self._tool_tasks: list[asyncio.Task] = []
@@ -123,7 +136,7 @@ class GeminiSession:
         for fc in tool_call.function_calls:
             logging.debug(f"Calling tool function: {fc.name} with args: {fc.args}")
 
-            response = await mcp_client.call_tool(fc.name, fc.args)
+            response = await self.mcp_client.call_tool(fc.name, fc.args)
 
             tool_response = types.LiveClientToolResponse(
                 function_responses=[
@@ -169,6 +182,7 @@ def get_connect_and_run_callable(websocket: WebSocket) -> Callable:
         backoff.expo, ConnectionClosedError, max_tries=10, on_backoff=on_backoff
     )
     async def connect_and_run() -> None:
+        mcp_client = app.state.mcp_client
         async with mcp_client:
             mcp_session = mcp_client.session
             live_connect_config = get_live_connect_config(
@@ -183,6 +197,7 @@ def get_connect_and_run_callable(websocket: WebSocket) -> Callable:
                 gemini_session = GeminiSession(
                     session=session,
                     websocket=websocket,
+                    mcp_client=mcp_client,
                 )
                 logging.info("Starting bidirectional communication")
                 await asyncio.gather(
