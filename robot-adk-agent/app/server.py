@@ -40,7 +40,6 @@ logging_client = google_cloud_logging.Client()
 logger = logging_client.logger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# uv run mcp run ./server.py
 config = {
     "mcpServers": {
         "robot": {
@@ -52,6 +51,9 @@ config = {
                 "python",
                 "server.py",
             ],
+            "env": {
+                "ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/robot_9"
+            },
         },
     }
 }
