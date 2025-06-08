@@ -42,7 +42,8 @@ config = {
                 "server.py",
             ],
             "env": {
-                "ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/robot_9"
+                "USE_API_PROXRY": "true",
+                "ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/robot_9",
             },
         },
     }
