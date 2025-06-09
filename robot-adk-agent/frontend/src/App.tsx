@@ -29,7 +29,7 @@ function App() {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [serverUrl, setServerUrl] = useState<string>(defaultUri);
   const [runId] = useState<string>(crypto.randomUUID());
-  const [userId, setUserId] = useState<string>("user1");
+  const [userId, setUserId] = useState<string>("robot_1");
 
   // Feedback state
   const [feedbackScore, setFeedbackScore] = useState<number>(10);
@@ -91,7 +91,10 @@ function App() {
             >
             </ControlTray>
             <div className="url-setup" style={{position: 'absolute', top: 0, left: 0, right: 0, pointerEvents: 'auto', zIndex: 1000, padding: '2px', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.9)'}}>
-              <div>
+                <div>
+                <h1 style={{ margin: '0 16px 0 0', fontSize: '24px', fontWeight: 600 }}>
+                  雲端系統及數據中心管理高級文憑
+                </h1>
                 <label htmlFor="server-url">Server URL:</label>
                 <input
                   id="server-url"
@@ -100,14 +103,14 @@ function App() {
                   onChange={(e) => setServerUrl(e.target.value)}
                   placeholder="Enter server URL"
                   style={{
-                    cursor: 'text',
-                    padding: '4px',
-                    margin: '0 4px', 
-                    borderRadius: '2px',
-                    border: '1px solid #ccc',
-                    fontSize: '14px',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    width: '200px'
+                  cursor: 'text',
+                  padding: '4px',
+                  margin: '0 4px', 
+                  borderRadius: '2px',
+                  border: '1px solid #ccc',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  width: '200px'
                   }}
                 />
                 <label htmlFor="user-id">User ID:</label>
@@ -118,17 +121,17 @@ function App() {
                   onChange={(e) => setUserId(e.target.value)}
                   placeholder="Enter user ID"
                   style={{
-                    cursor: 'text',
-                    padding: '4px',
-                    margin: '0 4px', 
-                    borderRadius: '2px',
-                    border: '1px solid #ccc',
-                    fontSize: '14px',
-                    fontFamily: 'system-ui, -apple-system, sans-serif',
-                    width: '100px'
+                  cursor: 'text',
+                  padding: '4px',
+                  margin: '0 4px', 
+                  borderRadius: '2px',
+                  border: '1px solid #ccc',
+                  fontSize: '14px',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  width: '100px'
                   }}
                 />
-              </div>
+                </div>
 
               {/* Feedback Button */}
               <button 

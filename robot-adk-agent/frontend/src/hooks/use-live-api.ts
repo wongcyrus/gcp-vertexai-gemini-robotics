@@ -48,7 +48,7 @@ export function useLiveAPI({
 }: UseLiveAPIProps): UseLiveAPIResults {
   const client = useMemo(
     () => new MultimodalLiveClient({ url, userId }),
-    [url, userId],
+    [url, userId]
   );
   const audioStreamerRef = useRef<AudioStreamer | null>(null);
 
