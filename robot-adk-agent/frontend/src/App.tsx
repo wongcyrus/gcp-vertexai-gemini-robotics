@@ -29,7 +29,7 @@ function App() {
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [serverUrl, setServerUrl] = useState<string>(defaultUri);
   const [runId] = useState<string>(crypto.randomUUID());
-  const [userId, setUserId] = useState<string>("robot_1");
+  const [userId, setUserId] = useState<string>("cloud_student");
 
   // Feedback state
   const [feedbackScore, setFeedbackScore] = useState<number>(10);
@@ -92,7 +92,12 @@ function App() {
             </ControlTray>
             <div className="url-setup" style={{position: 'absolute', top: 0, left: 0, right: 0, pointerEvents: 'auto', zIndex: 1000, padding: '2px', marginBottom: '2px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.9)'}}>
                 <div>
-                <h1 style={{ margin: '0 16px 0 0', fontSize: '24px', fontWeight: 600 }}>
+                <img
+                  src="https://hkiit.edu.hk/site/templates/images/HKIIT_Logo_bilingual.png"
+                  alt="HKIIT Logo"
+                  style={{ height: '40px', marginRight: '16px', verticalAlign: 'middle' }}
+                />
+                <h1 style={{ margin: '0 16px 0 0', fontSize: '24px', fontWeight: 600, display: 'inline-block', verticalAlign: 'middle' }}>
                   雲端系統及數據中心管理高級文憑
                 </h1>
                 <label htmlFor="server-url">Server URL:</label>
