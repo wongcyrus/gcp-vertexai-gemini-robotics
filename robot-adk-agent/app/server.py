@@ -22,6 +22,7 @@ from typing import Any, Literal
 import backoff
 import fastmcp
 from app.agent import MODEL_ID, genai_client, get_live_connect_config
+from app.config import config
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import logging as google_cloud_logging
@@ -29,25 +30,6 @@ from google.genai import types
 from google.genai.types import LiveServerToolCall
 from pydantic import BaseModel
 from websockets.exceptions import ConnectionClosedError
-
-config = {
-    "mcpServers": {
-        "robot": {
-            "command": "uv",
-            "args": [
-                "--directory",
-                "/workspaces/gcp-vertexai-gemini-robotics/robot-mcp-server/humanoid",
-                "run",
-                "python",
-                "server.py",
-            ],
-            "env": {
-                "ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/",
-                "ROBOT_IMAGE_API_URL": "https:///6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/",
-            },
-        },
-    }
-}
 
 # mcp_client is now managed as app.state.mcp_client
 
