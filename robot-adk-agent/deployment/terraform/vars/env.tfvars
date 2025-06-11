@@ -2,13 +2,13 @@
 project_name = "robot-adk-agent"
 
 # Your Production Google Cloud project id
-prod_project_id = "your-production-project-id"
+prod_project_id = "robot-adk-agent"
 
 # Your Staging / Test Google Cloud project id
-staging_project_id = "your-staging-project-id"
+staging_project_id = "robot-adk-agent"
 
 # Your Google Cloud project ID that will be used to host the Cloud Build pipelines.
-cicd_runner_project_id = "your-cicd-project-id"
+cicd_runner_project_id = "robot-adk-agent"
 
 # Name of the host connection you created in Cloud Build
 host_connection_name = "git-robot-adk-agent"

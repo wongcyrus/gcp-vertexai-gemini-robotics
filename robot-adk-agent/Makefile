@@ -41,3 +41,7 @@ lint:
 	uv run ruff check . --diff
 	uv run ruff format . --check --diff
 	uv run mypy .
+
+remove-backend:
+	PROJECT_ID=$$(gcloud config get-value project) && \
+	gcloud run services delete robot-adk-agent --region us-central1 --project $$PROJECT_ID --quiet

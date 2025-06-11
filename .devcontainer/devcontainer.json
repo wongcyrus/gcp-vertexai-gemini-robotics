@@ -5,6 +5,11 @@
         "ghcr.io/dhoeric/features/google-cloud-cli:1": {},
         "ghcr.io/devcontainers/features/python:1": {
             "version": "3.13"
+        },
+        "terraform": {
+            "version": "latest",
+            "tflint": "latest",
+            "terragrunt": "latest"
         }
     },
     "customizations": {
