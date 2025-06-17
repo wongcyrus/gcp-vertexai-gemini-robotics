@@ -16,6 +16,7 @@ config = {
             "env": {
                 "ROBOT_API_URL": "http://127.0.0.1:5000/run_action/",
                 "ROBOT_IMAGE_API_URL": "http://127.0.0.1:5000:5000/run_action/",
+                "SESSION_KEY": "your_email_address",
             },
         },
     }
