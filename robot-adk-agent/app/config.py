@@ -14,8 +14,8 @@ config = {
                 "server.py",
             ],
             "env": {
-                "IOT_ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/",
-                "ROBOT_API_URL": "https://humanoid-robot-simulator-74gfpibg5q-uc.a.run.app/run_action/",
+                "ROBOT_API_URL": "https://6mz6soy3j3.execute-api.us-east-1.amazonaws.com/prod/run_action/",
+                # "ROBOT_API_URL": "https://humanoid-robot-simulator-74gfpibg5q-uc.a.run.app/run_action/",
                 "ROBOT_IMAGE_API_URL": "http://127.0.0.1:5000:5000/run_action/",
                 "SESSION_KEY": "cywong@vtc.edu.hk",
             },
