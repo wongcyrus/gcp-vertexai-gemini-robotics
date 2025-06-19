@@ -42,7 +42,12 @@ def get_live_connect_config(tools) -> types.LiveConnectConfig:
         response_modalities=[types.Modality.AUDIO],
         tools=tools,
         # Change to desired language code (e.g., "es-ES" for Spanish, "fr-FR" for French)
-        speech_config=types.SpeechConfig(language_code="en-US"),
+        speech_config=types.SpeechConfig(
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Despina")
+            ),
+            language_code="cmn-CN",
+        ),
         system_instruction=types.Content(
             parts=[
                 types.Part(
