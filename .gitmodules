@@ -1,6 +1,3 @@
 [submodule "robot-adk-agent/app/robot-mcp-server"]
 	path = robot-adk-agent/app/robot-mcp-server
 	url = https://github.com/wongcyrus/robot-mcp-server
-[submodule "humanoid-robot-simulator"]
-	path = humanoid-robot-simulator
-	url = https://github.com/wongcyrus/humanoid-robot-simulator
