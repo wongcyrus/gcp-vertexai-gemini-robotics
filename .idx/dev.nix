@@ -13,7 +13,6 @@
     pkgs.terraform
     pkgs.docker
     pkgs.gnumake
-    pkgs.uv
     # pkgs.nodePackages.nodemon
   ];
 
