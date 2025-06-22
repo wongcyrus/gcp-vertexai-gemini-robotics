@@ -16,7 +16,7 @@ config = {
             "env": {
                 "ROBOT_API_URL": "https://humanoid-robot-simulator-74gfpibg5q-uc.a.run.app/run_action/",
                 # "ROBOT_API_URL": "http://localhost:5000/run_action/",
-                "SESSION_KEY": "gCS8UbctmwkjjGfiHSdzyMrLMxIXt7AfrYN3XJXra6b%2FwYFjhY3hwqCayM2XL%2F3Azz79pvCXiSviu9FKFZ42QHZxiR6Wy%2FBemIaRzVdye8w%3D",
+                "SESSION_KEY": "gCS8UbctmwkjjGfiHSdzyMrLMxIXt7AfrYN3XJXra6YuzF5R9AhtSqFZQhbsZKEIbJQCGK9YKhlfGQrgil0857I7OUVZNQHH7QJWKcNwPOs%3D",
                 "ROBOT_IMAGE_API_URL": "http://127.0.0.1:5000:5000/run_action/",
             },
         },

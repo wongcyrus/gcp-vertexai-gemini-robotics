@@ -172,7 +172,7 @@ To connect your local frontend (`make ui`) to the backend deployed on Cloud Run,
 
     ```bash
     # Replace with your actual service name, project, and region
-    gcloud run services proxy gemini-agent-service --port 8000 --project $PROJECT_ID --region $REGION
+    gcloud run services proxy robot-adk-agent --port 8000 --project $PROJECT_ID --region $REGION
     ```
 
     Keep this terminal running.

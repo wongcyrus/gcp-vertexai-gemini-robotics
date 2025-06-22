@@ -1,0 +1,46 @@
+# Frontend Deployment Configuration
+
+# Production Environment
+production:
+  project_id: "YOUR_PROD_PROJECT_ID"
+  service_name: "robot-adk-frontend"
+  region: "us-central1"
+  min_instances: 1
+  max_instances: 10
+  cpu: "1"
+  memory: "512Mi"
+  concurrency: 80
+  environment: "production"
+
+# Staging Environment
+staging:
+  project_id: "YOUR_STAGING_PROJECT_ID"
+  service_name: "robot-adk-frontend-staging"
+  region: "us-central1"
+  min_instances: 0
+  max_instances: 5
+  cpu: "1"
+  memory: "512Mi"
+  concurrency: 80
+  environment: "staging"
+
+# Development Environment
+development:
+  project_id: "YOUR_DEV_PROJECT_ID"
+  service_name: "robot-adk-frontend-dev"
+  region: "us-central1"
+  min_instances: 0
+  max_instances: 3
+  cpu: "1"
+  memory: "512Mi"
+  concurrency: 80
+  environment: "development"
+
+# Common Configuration
+common:
+  artifact_registry_repo: "robot-adk-agent"
+  image_name: "frontend-webapp"
+  port: 80
+  labels:
+    created-by: "adk"
+    component: "frontend"
