@@ -167,9 +167,9 @@ def get_connect_and_run_callable(websocket: WebSocket) -> Callable:
     async def connect_and_run() -> None:
         mcp_client = app.state.mcp_client
         async with mcp_client:
-            mcp_session = mcp_client.session
+            tools = await mcp_client.list_tools()
             live_connect_config = get_live_connect_config(
-                tools=[mcp_session],
+                tools=tools,
             )
             async with genai_client.aio.live.connect(
                 model=MODEL_ID, config=live_connect_config

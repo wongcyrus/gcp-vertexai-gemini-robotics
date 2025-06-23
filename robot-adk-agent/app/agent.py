@@ -44,7 +44,7 @@ def get_live_connect_config(tools) -> types.LiveConnectConfig:
         # Change to desired language code (e.g., "es-ES" for Spanish, "fr-FR" for French)
         speech_config=types.SpeechConfig(
             voice_config=types.VoiceConfig(
-                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Despina")
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Callirrhoe")
             ),
             language_code="cmn-CN",
         ),
