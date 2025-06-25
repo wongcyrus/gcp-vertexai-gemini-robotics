@@ -54,14 +54,21 @@ def mock_google_auth_default() -> Generator[None, None, None]:
 def mock_dependencies() -> Generator[None, None, None]:
     """
     Mock Vertex AI dependencies for testing.
-    Patches genai client and tool functions.
+    Patches genai client and MCP client.
     """
     with (
         patch("app.server.genai_client") as mock_genai,
-        patch("app.server.tool_functions") as mock_tools,
+        patch("app.server.fastmcp.Client") as mock_mcp_client,
     ):
         mock_genai.aio.live.connect = AsyncMock()
-        mock_tools.return_value = {}
+        mock_mcp_client.return_value = AsyncMock()
+
+        # Set up app state for testing
+        from app.config import config
+        from app.server import app
+
+        app.state.config = config
+
         yield
 
 

@@ -70,7 +70,7 @@ function App() {
 
   return (
     <div className="App">
-      <LiveAPIProvider url={serverUrl} userId={userId}>
+      <LiveAPIProvider url={serverUrl} userId={userId} runId={runId}>
         <div className="streaming-console">
           <SidePanel />
           <main>
