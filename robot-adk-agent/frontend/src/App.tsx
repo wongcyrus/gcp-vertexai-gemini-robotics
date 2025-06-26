@@ -24,7 +24,7 @@ import cn from "classnames";
 // Get host from URL query parameters or use default
 const getHostFromQuery = (): string => {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get('host') || "localhost:8000";
+  return urlParams.get('host') || "ws://localhost:8000";
 };
 
 // Get user ID from URL query parameters or use default
@@ -34,13 +34,12 @@ const getUserIdFromQuery = (): string => {
 };
 
 const defaultHost = getHostFromQuery();
-const defaultUri = `ws://${defaultHost}/`;
 const defaultUserId = getUserIdFromQuery();
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
-  const [serverUrl, setServerUrl] = useState<string>(defaultUri);
+  const [serverUrl, setServerUrl] = useState<string>(defaultHost);
   const [runId] = useState<string>(crypto.randomUUID());
   const [userId, setUserId] = useState<string>(defaultUserId);
 
