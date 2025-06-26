@@ -14,22 +14,53 @@
  * limitations under the License.
  */
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import "./App.scss";
 import { LiveAPIProvider } from "./contexts/LiveAPIContext";
 import SidePanel from "./components/side-panel/SidePanel";
 import ControlTray from "./components/control-tray/ControlTray";
 import cn from "classnames";
 
-const defaultHost = "localhost:8000";
+// Get host from URL query parameters or use default
+const getHostFromQuery = (): string => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('host') || "localhost:8000";
+};
+
+// Get user ID from URL query parameters or use default
+const getUserIdFromQuery = (): string => {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('userId') || "cloud_student";
+};
+
+const defaultHost = getHostFromQuery();
 const defaultUri = `ws://${defaultHost}/`;
+const defaultUserId = getUserIdFromQuery();
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const [serverUrl, setServerUrl] = useState<string>(defaultUri);
   const [runId] = useState<string>(crypto.randomUUID());
-  const [userId, setUserId] = useState<string>("cloud_student");
+  const [userId, setUserId] = useState<string>(defaultUserId);
+
+  // Update server URL and user ID if query parameters change
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const newHost = getHostFromQuery();
+      const newUri = `ws://${newHost}/`;
+      const newUserId = getUserIdFromQuery();
+      setServerUrl(newUri);
+      setUserId(newUserId);
+    };
+
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleUrlChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, []);
 
   // Feedback state
   const [feedbackScore, setFeedbackScore] = useState<number>(10);

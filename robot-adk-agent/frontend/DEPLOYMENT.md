@@ -42,7 +42,7 @@ This directory contains the deployment configuration and scripts for deploying t
 
 ```bash
 # Set your project ID
-export PROJECT_ID=	robot-adk-agent
+export PROJECT_ID=robot-adk-agent
 
 # Deploy to Cloud Run
 ./deploy-to-cloudrun.sh
