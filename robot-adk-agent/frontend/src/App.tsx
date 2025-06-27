@@ -61,43 +61,6 @@ function App() {
     };
   }, []);
 
-  // Feedback state
-  const [feedbackScore, setFeedbackScore] = useState<number>(10);
-  const [feedbackText, setFeedbackText] = useState<string>("");
-  const [sendFeedback, setShowFeedback] = useState(false);
-
-  const submitFeedback = async () => {
-    const feedbackUrl = new URL('feedback', serverUrl.replace('ws', 'http')).href;
-    
-    try {
-      const response = await fetch(feedbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          score: feedbackScore,
-          text: feedbackText,
-          run_id: runId,
-          user_id: userId,
-          log_type: "feedback"
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to submit feedback: Server returned status ${response.status} ${response.statusText}`);
-      }
-
-      // Clear feedback after successful submission
-      setFeedbackScore(10);
-      setFeedbackText("");
-      setShowFeedback(false);
-      alert("Feedback submitted successfully!");
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      alert(`Failed to submit feedback:  ${error}`);
-    }
-  };
-
   return (
     <div className="App">
       <LiveAPIProvider url={serverUrl} userId={userId} runId={runId}>
@@ -167,72 +130,8 @@ function App() {
                   }}
                 />
                 </div>
-
-              {/* Feedback Button */}
-              <button 
-                onClick={() => setShowFeedback(!sendFeedback)}
-                style={{
-                  padding: '5px 10px',
-                  margin: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                {sendFeedback ? 'Hide Feedback' : 'Send Feedback'}
-              </button>
             </div>
 
-            {/* Feedback Overlay Section */}
-            {sendFeedback && (
-              <div className="feedback-section" style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                padding: '20px',
-                background: 'rgba(255, 255, 255, 0.95)',
-                boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-                borderRadius: '8px',
-                zIndex: 1001,
-                minWidth: '300px'
-              }}>
-                <h3>Provide Feedback</h3>
-                <div>
-                  <label htmlFor="feedback-score">Score (0-10): </label>
-                  <input
-                    id="feedback-score"
-                    type="number"
-                    min="0"
-                    max="10"
-                    value={feedbackScore}
-                    onChange={(e) => setFeedbackScore(Number(e.target.value))}
-                    style={{margin: '0 10px'}}
-                  />
-                </div>
-                <div style={{marginTop: '10px'}}>
-                  <label htmlFor="feedback-text">Comments: </label>
-                  <textarea
-                    id="feedback-text"
-                    value={feedbackText}
-                    onChange={(e) => setFeedbackText(e.target.value)}
-                    style={{
-                      width: '100%',
-                      height: '60px',
-                      margin: '5px 0'
-                    }}
-                  />
-                </div>
-                <button
-                  onClick={submitFeedback}
-                  style={{
-                    padding: '5px 10px',
-                    marginTop: '5px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Submit Feedback
-                </button>
-              </div>
-            )}
           </main>
         </div>
       </LiveAPIProvider>
