@@ -13,17 +13,25 @@
 # limitations under the License.
 
 import asyncio
+import base64
 import copy
 import json
 import logging
+import os
 from asyncio import Queue
 from collections.abc import Callable
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, Optional
+from urllib.parse import unquote_plus
+from zoneinfo import ZoneInfo
 
 import backoff
 import fastmcp
 from app.agent import MODEL_ID, genai_client, get_live_connect_config
 from app.config import config
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import logging as google_cloud_logging
@@ -42,6 +50,10 @@ logging_client = google_cloud_logging.Client()
 logger = logging_client.logger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+SESSION_AES_KEY = os.environ.get("SESSION_AES_KEY", "0123456789012345").encode()
+SESSION_AES_IV = os.environ.get("SESSION_AES_IV", "5432109876543210").encode()
+SKIP_TIME_CHECK = os.environ.get("SKIP_TIME_CHECK", "true").lower() == "true"
+
 
 class GeminiSession:
     """Manages bidirectional communication between a client and the Gemini model."""
@@ -51,6 +63,8 @@ class GeminiSession:
         session: Any,
         websocket: WebSocket,
         mcp_client: fastmcp.Client,
+        start_time: datetime,
+        end_time: datetime,
     ) -> None:
         """Initialize the Gemini session.
 
@@ -62,6 +76,8 @@ class GeminiSession:
         self.session = session
         self.websocket = websocket
         self.mcp_client = mcp_client
+        self.start_time = start_time
+        self.end_time = end_time
         self.run_id = "n/a"
         self.user_id = "n/a"
         self._tool_tasks: list[asyncio.Task] = []
@@ -101,6 +117,14 @@ class GeminiSession:
             while self._is_running:
                 try:
                     data = await self.websocket.receive_json()
+
+                    # Check session validity based on time
+                    current_time = datetime.now(ZoneInfo("Asia/Hong_Kong"))
+                    if not (self.start_time < current_time < self.end_time):
+                        logging.info(
+                            f"Session for user {self.user_id} is not valid at {current_time}, closing connection."
+                        )
+                        break
 
                     if isinstance(data, dict) and (
                         "realtimeInput" in data or "clientContent" in data
@@ -251,8 +275,23 @@ def get_connect_and_run_callable(
         logging.info(f"Creating MCP client for user: {initial_user_id}")
         mcp_client = fastmcp.Client(user_config)
         gemini_session = None
-
         try:
+            if not SKIP_TIME_CHECK:
+                # Decrypt the session key to get user session details
+                logging.info(f"Decrypting session key for user: {initial_user_id}")
+                user_session = decrypt(session_key=initial_user_id)
+
+                if user_session is None or not user_session.get("is_valid"):
+                    logging.info(
+                        f"User session {initial_user_id} is not valid, starting new session"
+                    )
+                    return None
+                session_start = user_session.get("from", None)
+                session_end = user_session.get("to", None)
+            else:
+                # Skip time check, use current time for session start and end
+                session_start = datetime.now(ZoneInfo("Asia/Hong_Kong"))
+                session_end = session_start + timedelta(days=1)
             async with mcp_client:
                 tools = await mcp_client.list_tools()
                 live_connect_config = get_live_connect_config(
@@ -268,6 +307,8 @@ def get_connect_and_run_callable(
                         session=session,
                         websocket=websocket,
                         mcp_client=mcp_client,
+                        start_time=session_start,
+                        end_time=session_end,
                     )
                     # Set initial user_id
                     gemini_session.user_id = initial_user_id
@@ -296,7 +337,86 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     logging.info(f"WebSocket connection established for user: {user_id}")
 
     connect_and_run = get_connect_and_run_callable(websocket, user_id)
+    if not connect_and_run:
+        logging.error(f"Failed to create connect_and_run callable for user: {user_id}")
+        await websocket.close(code=1000, reason="Failed to create session")
+        return
     await connect_and_run()
+
+
+def decrypt(session_key: str) -> Optional[dict]:
+    """
+    Decrypts an AES encrypted string using a fixed key and IV.
+
+    Args:
+        session_key: The base64-encoded AES encrypted string.
+
+    Returns:
+        A dictionary containing the decrypted session data, or None if decryption fails.
+    """
+
+    try:
+        # Convert the encrypted string to bytes
+        # Use unquote_plus to handle URL-encoded characters, spaces, and plus signs
+        session_key = unquote_plus(session_key).replace(" ", "+")
+        encrypted_bytes = base64.b64decode(session_key)
+
+        # Perform AES decryption
+        cipher = Cipher(
+            algorithms.AES(SESSION_AES_KEY),
+            modes.CBC(SESSION_AES_IV),
+            backend=default_backend(),
+        )
+        decryptor = cipher.decryptor()
+        decrypted_bytes = decryptor.update(encrypted_bytes) + decryptor.finalize()
+
+        # Remove padding (assuming PKCS7 padding)
+        unpadder = padding.PKCS7(algorithms.AES.block_size).unpadder()
+        decrypted_bytes = unpadder.update(decrypted_bytes) + unpadder.finalize()
+
+        # Decode the bytes to a string
+        decrypted_string = decrypted_bytes.decode("utf-8")
+
+        logging.info(f"Decrypted string: {decrypted_string}")
+
+        # TODO: Quick fix for trailing double quote issue
+        if decrypted_string.endswith('"'):
+            decrypted_string = decrypted_string[:-1]
+        # Validate and parse JSON
+        try:
+            session_object = json.loads(decrypted_string)
+        except json.JSONDecodeError as json_error:
+            logging.error(f"JSON parsing error: {json_error}")
+            return None
+
+        # Convert Excel serial dates to datetime and check validity
+        excel_start_date = datetime(1899, 12, 30, tzinfo=ZoneInfo("Asia/Hong_Kong"))
+        decoded_datetime_to = decoded_datetime_from = None
+
+        if "to" in session_object:
+            decoded_datetime_to = excel_start_date + timedelta(
+                days=session_object["to"]
+            )
+            session_object["to"] = decoded_datetime_to
+
+        if "from" in session_object:
+            decoded_datetime_from = excel_start_date + timedelta(
+                days=session_object["from"]
+            )
+            session_object["from"] = decoded_datetime_from
+
+        current_time = datetime.now(ZoneInfo("Asia/Hong_Kong"))
+        session_object["is_valid"] = (
+            decoded_datetime_from is not None
+            and decoded_datetime_to is not None
+            and decoded_datetime_from < current_time < decoded_datetime_to
+        )
+        logging.info(f"Session object after decryption: {session_object}")
+        return session_object
+
+    except Exception as e:
+        logging.error(f"Decryption error: {e}")
+        return None
 
 
 if __name__ == "__main__":
