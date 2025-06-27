@@ -24,7 +24,7 @@ backend:
 		--allow-unauthenticated \
 		--labels "created-by=adk" \
 		--set-env-vars \
-		"COMMIT_SHA=$(shell git rev-parse HEAD)"
+		"COMMIT_SHA=$(shell git rev-parse HEAD),SKIP_TIME_CHECK=true"
 
 local-backend:
 	uv run uvicorn app.server:app --host 0.0.0.0 --port 8000 --reload
